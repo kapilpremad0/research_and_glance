@@ -86,6 +86,7 @@ exports.updateProfile = async (req, res) => {
         if (name) user.name = name;
         if (email) user.email = email;
         if (gender) user.gender = gender;
+        
         if (dob) user.dob = dob;
         if (ssn) user.ssn = ssn;
         if (terms_conditions) user.terms_conditions = terms_conditions;
