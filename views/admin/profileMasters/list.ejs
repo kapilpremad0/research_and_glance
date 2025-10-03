@@ -1,0 +1,154 @@
+<div class="app-content content">
+  <div class="content-overlay"></div>
+  <div class="header-navbar-shadow"></div>
+  <div class="content-wrapper container-xxl p-0">
+    <div class="content-header row"></div>
+    <div class="content-body">
+      <!-- Table start -->
+      <div class="row" id="table-bordered">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h2>Profile Masters</h2>
+              <a href="/admin/profileMaster/create" class="btn btn-primary">Create Profile Master</a>
+            </div>
+
+            <div class="card-body">
+              <div class="table-responsive card card-company-table">
+                <table class="table" id="profileMasterTable">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Profile Name</th>
+                      <th>Earn Point</th>
+                      <th>Questions</th>
+                      <th>Created At</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteProfileMasterModal" tabindex="-1" aria-labelledby="deleteProfileMasterModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Profile Master</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete <strong id="deleteProfileMasterName"></strong>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="confirmDeleteProfileMaster" class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    // Initialize DataTable
+    var table = $('#profileMasterTable').DataTable({
+      columnDefs: [{
+        orderable: false,
+        targets: -1
+      }],
+      processing: true,
+      serverSide: true,
+      ajax: {
+        url: '/admin/profileMaster/data',
+        type: 'POST',
+        contentType: 'application/json',
+        data: function(d) {
+          return JSON.stringify(d);
+        }
+      },
+      columns: [{
+          data: null,
+          render: function(data, type, row, meta) {
+            return meta.settings._iDisplayStart + meta.row + 1;
+          },
+          searchable: false
+        },
+        {
+          data: 'profile_name',
+          render: function(data, type, row) {
+            let img = row.image ?
+              `<img src="/uploads/${row.image}" style="height:40px;width:40px;border-radius:50%;object-fit:cover;margin-right:10px;" />` :
+              `<img src="/default.jpg" style="height:40px;width:40px;border-radius:50%;object-fit:cover;margin-right:10px;" />`;
+            return `${img} ${data}`;
+          }
+        },
+        {
+          data: 'earn_point'
+        },
+        {
+          data: 'questions',
+          // render: function(questions) {
+          //   if (!questions || !questions.length) return `<span class="badge bg-light text-dark">No Questions</span>`;
+          //   return questions.map(q => {
+          //     let opts = q.options && q.options.length ? ` → <span class="text-muted">${q.options.join(", ")}</span>` : "";
+          //     return `<div><b>${q.question_text}</b> (${q.type}) ${opts}</div>`;
+          //   }).join("");
+          // }
+        },
+        {
+          data: 'created_at',
+          render: function(date) {
+            return new Date(date).toLocaleString();
+          }
+        },
+        {
+          data: '_id',
+          render: function(id, type, row) {
+            return `
+              <a href="/admin/profileMaster/edit/${id}" class="btn btn-sm btn-warning">Edit</a>
+              <button data-id="${id}" data-name="${row.profile_name}" class="btn btn-sm btn-danger delete-profile-master">Delete</button>
+            `;
+          }
+        }
+      ],
+      drawCallback: function(settings) {
+        feather.replace(); // replace icons if you use feather icons
+      }
+    });
+
+    // Delete Profile Master
+    let deleteProfileMasterId = null;
+    $(document).on("click", ".delete-profile-master", function() {
+      deleteProfileMasterId = $(this).data("id");
+      let profileName = $(this).data("name");
+      $("#deleteProfileMasterName").text(profileName);
+      $("#deleteProfileMasterModal").modal("show");
+    });
+
+    $("#confirmDeleteProfileMaster").on("click", function() {
+      if (!deleteProfileMasterId) return;
+
+      $.ajax({
+        url: "/admin/profileMaster/" + deleteProfileMasterId,
+        type: "DELETE",
+        success: function(response) {
+          $("#deleteProfileMasterModal").modal("hide");
+          table.ajax.reload();
+          showSuccessToast("Profile Master deleted successfully!");
+        },
+        error: function(err) {
+          $("#deleteProfileMasterModal").modal("hide");
+          showErrorToast("Failed to delete Profile Master!");
+        }
+      });
+    });
+  });
+</script>

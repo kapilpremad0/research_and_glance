@@ -1,0 +1,254 @@
+<div class="app-content content">
+  <div class="content-overlay"></div>
+  <div class="header-navbar-shadow"></div>
+  <div class="content-wrapper container-xxl p-0">
+    <div class="content-header row"></div>
+    <div class="content-body">
+
+      <div class="col-xl-12 col-lg-12">
+        <form id="submitForm" method="post" enctype="multipart/form-data">
+          <input type="hidden" id="profile_id" name="profile_id" value="<%= profile ? profile._id : '' %>">
+
+          <div class="card">
+            <div class="card-header">
+              <h3><%= profile ? 'Edit Profile Master' : 'Create Profile Master' %></h3>
+            </div>
+            <div class="card-body">
+              <div class="row">
+
+                <!-- Profile Name -->
+                <div class="mb-1 col-md-6">
+                  <label for="profile_name">Profile Name</label>
+                  <input type="text" class="form-control" id="profile_name" name="profile_name" value="<%= profile ? profile.profile_name : '' %>" placeholder="Enter profile name"  />
+                  <div id="profile_name-submit_errors" class="validation-error"></div>
+                </div>
+
+                <div class="mb-1 col-md-6">
+                  <label for="image"> Image</label>
+                  <input type="file" class="form-control" id="image" name="image" accept="image/*" />
+                  <% if (profile && profile.image) { %>
+                  <img src="/uploads/<%= profile.image %>" alt="image" width="50" class="mt-1 rounded" />
+                  <% } %>
+                  <div id="image-submit_errors" class="validation-error"></div>
+                </div>
+
+                <div class="mb-1 col-md-6">
+                  <label for="earn_point">Earn Points</label>
+                  <input type="text" class="form-control" id="earn_point" name="earn_point" value="<%= profile ? profile.earn_point : '' %>" placeholder="Earn Points"  />
+                  <div id="earn_point-submit_errors" class="validation-error"></div>
+                </div>
+
+
+              </div>
+
+
+              <!-- Questions Section -->
+              <div class="mb-3">
+                <h5>Questions</h5>
+                <div id="questionsWrapper">
+
+                  <% if(profile && profile.questions && profile.questions.length > 0) { %>
+                    <% profile.questions.forEach(function(q, qIdx) { %>
+                      <div class="question-block border p-2 mb-3">
+                        <div class="mb-2">
+                          <label>Question</label>
+                          <input type="text" class="form-control" name="questions[<%= qIdx %>][question_text]" value="<%= q.question_text %>" required />
+                        </div>
+
+                        <div class="mb-2">
+                          <label>Type</label>
+                          <select class="form-control question-type" name="questions[<%= qIdx %>][type]" required>
+                            <option value="">Select Type</option>
+                            <option value="text" <%= q.type === 'text' ? 'selected' : '' %>>Text</option>
+                            <option value="radio" <%= q.type === 'radio' ? 'selected' : '' %>>Radio</option>
+                            <option value="checkbox" <%= q.type === 'checkbox' ? 'selected' : '' %>>Checkbox</option>
+                            <option value="select" <%= q.type === 'select' ? 'selected' : '' %>>Select</option>
+                          </select>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="options-wrapper" style="<%= ['radio','checkbox','select'].includes(q.type) ? '' : 'display:none;' %>">
+                          <label>Options</label>
+                          <div class="option-rows">
+                            <% q.options.forEach(function(opt, oIdx) { %>
+                              <div class="input-group mb-2 option-row">
+                                <input type="text" class="form-control" name="questions[<%= qIdx %>][options][]" value="<%= opt %>" placeholder="Option Name" />
+                                <button class="btn btn-danger remove-option" type="button">Remove</button>
+                              </div>
+                            <% }) %>
+                          </div>
+                          <button type="button" class="btn btn-sm btn-primary add-option-btn">Add Option</button>
+                        </div>
+
+                        <button type="button" class="btn btn-danger btn-sm mt-2 remove-question">Remove Question</button>
+                      </div>
+                    <% }) %>
+                  <% } else { %>
+                    <!-- Default empty question -->
+                    <div class="question-block border p-2 mb-3">
+                      <div class="mb-2">
+                        <label>Question</label>
+                        <input type="text" class="form-control" name="questions[0][question_text]" placeholder="Enter question" required />
+                      </div>
+
+                      <div class="mb-2">
+                        <label>Type</label>
+                        <select class="form-control question-type" name="questions[0][type]" required>
+                          <option value="">Select Type</option>
+                          <option value="text">Text</option>
+                          <option value="radio">Radio</option>
+                          <option value="checkbox">Checkbox</option>
+                          <option value="select">Select</option>
+                        </select>
+                      </div>
+
+                      <div class="options-wrapper" style="display:none;">
+                        <label>Options</label>
+                        <div class="option-rows"></div>
+                        <button type="button" class="btn btn-sm btn-primary add-option-btn">Add Option</button>
+                      </div>
+
+                      <button type="button" class="btn btn-danger btn-sm mt-2 remove-question">Remove Question</button>
+                    </div>
+                  <% } %>
+
+                </div>
+
+                <button type="button" id="addQuestionBtn" class="btn btn-success btn-sm mt-2">Add Question</button>
+              </div>
+
+              <!-- Submit -->
+              <div class="mb-2">
+                <button type="submit" class="btn btn-primary mt-3">
+                  <%= profile ? 'Update Profile' : 'Save Profile' %>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function () {
+
+  // Re-index all questions and options (important after add/remove)
+  function reindexQuestions() {
+    $('#questionsWrapper .question-block').each(function(qIdx) {
+      $(this).find('input[name], select[name]').each(function() {
+        let name = $(this).attr('name');
+        name = name.replace(/questions\[\d+\]/, `questions[${qIdx}]`);
+        $(this).attr('name', name);
+      });
+    });
+  }
+
+  // Add Question
+  $('#addQuestionBtn').click(function () {
+    let index = $('#questionsWrapper .question-block').length;
+    let questionBlock = `
+      <div class="question-block border p-2 mb-3">
+        <div class="mb-2">
+          <label>Question</label>
+          <input type="text" class="form-control" name="questions[${index}][question_text]" placeholder="Enter question" required />
+        </div>
+        <div class="mb-2">
+          <label>Type</label>
+          <select class="form-control question-type" name="questions[${index}][type]" required>
+            <option value="">Select Type</option>
+            <option value="text">Text</option>
+            <option value="radio">Radio</option>
+            <option value="checkbox">Checkbox</option>
+            <option value="select">Select</option>
+          </select>
+        </div>
+        <div class="options-wrapper" style="display:none;">
+          <label>Options</label>
+          <div class="option-rows"></div>
+          <button type="button" class="btn btn-sm btn-primary add-option-btn">Add Option</button>
+        </div>
+        <button type="button" class="btn btn-danger btn-sm mt-2 remove-question">Remove Question</button>
+      </div>`;
+    $('#questionsWrapper').append(questionBlock);
+  });
+
+  // Show/Hide options based on type
+  $(document).on('change', '.question-type', function () {
+    let wrapper = $(this).closest('.question-block').find('.options-wrapper');
+    if ($(this).val() === 'radio' || $(this).val() === 'checkbox' || $(this).val() === 'select') {
+      wrapper.show();
+    } else {
+      wrapper.hide().find('.option-rows').empty();
+    }
+  });
+
+  // Add Option
+  $(document).on('click', '.add-option-btn', function () {
+    let questionBlock = $(this).closest('.question-block');
+    let qIndex = $('#questionsWrapper .question-block').index(questionBlock);
+
+    let optionRow = `
+      <div class="input-group mb-2 option-row">
+        <input type="text" class="form-control" name="questions[${qIndex}][options][]" placeholder="Option Name" required />
+        <button class="btn btn-danger remove-option" type="button">Remove</button>
+      </div>`;
+    questionBlock.find('.option-rows').append(optionRow);
+  });
+
+  // Remove Option
+  $(document).on('click', '.remove-option', function () {
+    $(this).closest('.option-row').remove();
+  });
+
+  // Remove Question
+  $(document).on('click', '.remove-question', function () {
+    $(this).closest('.question-block').remove();
+    reindexQuestions();
+  });
+
+  // Submit Form
+  $('#submitForm').on('submit', function (e) {
+    e.preventDefault();
+    $('.validation-error').text('');
+
+    const formData = new FormData(this);
+    const profileId = $('#profile_id').val();
+
+    let url = '/admin/profileMaster';
+    let method = 'POST';
+
+    if (profileId) {
+      url = '/admin/profileMaster/' + profileId;
+      method = 'PUT';
+    }
+
+    $.ajax({
+      url: url,
+      method: method,
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function (response) {
+        window.location.href = '/admin/profileMaster';
+      },
+      error: function (res) {
+        if (res.status == 400 || res.status == 422) {
+          if (res.responseJSON && res.responseJSON.errors) {
+            var error = res.responseJSON.errors;
+            $.each(error, function (key, value) {
+              $("#" + key + "-submit_errors").text(value);
+            });
+          }
+        }
+        if (res.status == 500) {
+          alert(res.responseJSON.error);
+        }
+      }
+    });
+  });
+});
+</script>
