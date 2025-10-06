@@ -9,7 +9,7 @@ const UserSchema = new mongoose.Schema({
     },
     user_type: {
         type: String,
-        enum: ['customer', 'driver', 'admin'],
+        enum: ['customer', 'admin'],
         default: 'customer'
     },
     otp_verify: {
@@ -43,9 +43,17 @@ const UserSchema = new mongoose.Schema({
     otp: { type: String },
     otpExpiry: { type: Date },
 
-    ssn: { type: String, default: null },
-    emergencyContact: { type: String, default: null },
-    homeAddress: { type: String, default: null },
+    referralCode: {
+        type: String,
+        unique: true
+    },
+    fromReferral: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", // user who referred this user
+        default: null
+    },
+    wallet_balance: { type: Number, default: 0 },
+
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
@@ -103,6 +111,15 @@ UserSchema.virtual('document_urls').get(function () {
     }
 
     return docs;
+});
+
+
+UserSchema.pre("save", async function (next) {
+    if (!this.referralCode) {
+        // Example: "USR" + random 6 alphanumeric string
+        this.referralCode = "PTK" + crypto.randomBytes(3).toString("hex").toUpperCase();
+    }
+    next();
 });
 
 module.exports = mongoose.model('User', UserSchema);
