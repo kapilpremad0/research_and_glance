@@ -21,9 +21,34 @@
       </li>
       <li class=" nav-item <%= currentRoute.startsWith('/admin/drivers') ? 'active' : '' %>"><a class="d-flex align-items-center" href="<%= '/admin/drivers' %>"><i data-feather="rotate-cw"></i><span class="menu-title text-truncate" data-i18n="Form Repeater">Drivers</span></a>
       </li>
-      <li class=" nav-item <%= currentRoute.startsWith('/admin/profileMaster') ? 'active' : '' %>"><a class="d-flex align-items-center" href="<%= '/admin/profileMaster' %>"><i data-feather="rotate-cw"></i><span class="menu-title text-truncate" data-i18n="Form Repeater">Profile Master</span></a>
+
+
+      <li class="nav-item">
+        <a class="d-flex align-items-center" href="#">
+          <i data-feather="settings"></i>
+          <span class="menu-title text-truncate" data-i18n="Hostels">Setting</span>
+        </a>
+        <ul class="menu-content">
+
+          <li class="nav-item <%= currentRoute.startsWith('/admin/settings') ? 'active' : '' %>">
+            <a class="d-flex align-items-center" href="/admin/settings">
+              <i data-feather="list"></i>
+              <span class="menu-title text-truncate" data-i18n="Setting">General Setting</span>
+            </a>
+          </li>
+
+          <li class=" nav-item <%= currentRoute.startsWith('/admin/profileMaster') ? 'active' : '' %>">
+            <a class="d-flex align-items-center" href="<%= '/admin/profileMaster' %>">
+              <i data-feather="list"></i>
+              <span class="menu-title text-truncate" data-i18n="Form Repeater">Profile Master</span>
+            </a>
+          </li>
+
+        </ul>
       </li>
-      
+
+
+
     </ul>
   </div>
 </div>
